@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Promessa do Butico</title>
+  <style>
+    body {
+      margin: 0;
+      background: black;
+      overflow: hidden;
+      font-family: Arial, sans-serif;
+      color: white;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      user-select: none;
+    }
+    #container {
+      text-align: center;
+      z-index: 10;
+      position: relative;
+      background: rgba(0,0,0,0.6);
+      padding: 20px 40px;
+      border-radius: 12px;
+    }
+    #pergunta {
+      font-size: 2em;
+      margin-bottom: 20px;
+    }
+    button {
+      font-size: 1.2em;
+      padding: 12px 30px;
+      margin: 0 15px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+      color: white;
+      font-weight: bold;
+    }
+    #sim {
+      background-color: #28a745;
+    }
+    #sim:hover {
+      background-color: #218838;
+    }
+    #nao {
+      background-color: #dc3545;
+    }
+    #nao:active {
+      opacity: 0.7;
+    }
+    #teamo {
+      font-size: 3em;
+      color: white;
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      z-index: 100;
+      display: none;
+    }
+    .fogo {
+      position: absolute;
+      font-size: 20px;
+      pointer-events: none;
+      user-select: none;
+      animation: explode 2s forwards;
+    }
+    @keyframes explode {
+      0% {
+        opacity: 1;
+        transform: translate(0,0) scale(1);
+      }
+      100% {
+        opacity: 0;
+        transform: translate(calc(var(--x) * 100px), calc(var(--y) * 100px)) scale(0);
+      }
+    }
+  </style>
+</head>
+<body>
+  <div id="container">
+    <div id="pergunta">E a promessa do butico?</div>
+    <button id="sim">Sim</button>
+    <button id="nao">Não</button>
+  </div>
+  <div id="teamo">TE AMO!!!</div>
+
+  <script>
+    const naoBtn = document.getElementById('nao');
+    const simBtn = document.getElementById('sim');
+    const container = document.getElementById('container');
+    const teamo = document.getElementById('teamo');
+    const body = document.body;
+
+    // Define posições próximas para o botão NÃO ficar
+    const positions = [
+      {x: 60, y: 150},
+      {x: 150, y: 150},
+      {x: 240, y: 150},
+      {x: 330, y: 150},
+      {x: 60, y: 220},
+      {x: 150, y: 220},
+      {x: 240, y: 220},
+      {x: 330, y: 220}
+    ];
+
+    // Inicial: NÃO fica perto do SIM
+    naoBtn.style.position = 'relative';
+    naoBtn.style.left = '20px';
+    naoBtn.style.top = '0px';
+
+    // Quando clicar no NÃO, ele vai sumir e aparecer em outra posição próxima (mas sempre visível)
+    naoBtn.addEventListener('click', () => {
+      // escolher posição aleatória diferente da atual
+      const currentLeft = parseInt(naoBtn.style.left);
+      let newPos;
+      do {
+        newPos = positions[Math.floor(Math.random() * positions.length)];
+      } while (Math.abs(newPos.x - currentLeft) < 50);
+
+      naoBtn.style.left = newPos.x + 'px';
+      naoBtn.style.top = newPos.y + 'px';
+    });
+
+    // Quando clicar no SIM: esconder tudo e mostrar TE AMO
+    simBtn.addEventListener('click', () => {
+      container.style.display = 'none';
+      teamo.style.display = 'block';
+    });
+
+    // Criar fogos de artifício coloridos pelo fundo
+    function criarFogo() {
+      const fogo = document.createElement('div');
+      fogo.classList.add('fogo');
+
+      // Cores variadas
+      const cores = ['#ff4d4d', '#ffcc00', '#33cc33', '#3399ff', '#ff66cc', '#ff9933', '#66ffff', '#cc33ff'];
+      const cor = cores[Math.floor(Math.random() * cores.length)];
+      fogo.style.color = cor;
+
+      // posição aleatória na tela
+      fogo.style.left = Math.random() * window.innerWidth + 'px';
+      fogo.style.top = Math.random() * window.innerHeight + 'px';
+
+      // variáveis para animação
+      fogo.style.setProperty('--x', (Math.random() - 0.5).toFixed(2));
+      fogo.style.setProperty('--y', (Math.random() - 0.5).toFixed(2));
+
+      body.appendChild(fogo);
+
+      setTimeout(() => {
+        fogo.remove();
+      }, 2000); // dura 2 segundos, depois desaparece
+    }
+
+    // Criar vários fogos em intervalos para efeito contínuo
+    setInterval(criarFogo, 150);
+
+  </script>
+</body>
+</html>
