@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Promessa do Butico</title>
+<style>
+  body {
+    margin: 0;
+    background: black;
+    overflow: hidden;
+    font-family: Arial, sans-serif;
+    color: white;
+    user-select: none;
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+  }
+  #message {
+    font-size: 2rem;
+    margin-bottom: 40px;
+    z-index: 10;
+    position: relative;
+  }
+  #buttons {
+    display: flex;
+    gap: 40px;
+    z-index: 10;
+    position: relative;
+  }
+  button {
+    padding: 12px 30px;
+    font-size: 1.2rem;
+    border-radius: 6px;
+    border: none;
+    cursor: pointer;
+    font-weight: bold;
+    user-select: none;
+    position: relative;
+    transition: background-color 0.3s ease;
+  }
+  #btnSim {
+    background-color: #4caf50;
+    color: white;
+  }
+  #btnSim:hover {
+    background-color: #45a049;
+  }
+  #btnNao {
+    background-color: #f44336;
+    color: white;
+    position: relative;
+  }
+  #btnNao.hidden {
+    display: none;
+  }
+  #finalMessage {
+    font-size: 3rem;
+    color: white;
+    display: none;
+    z-index: 20;
+    position: relative;
+    user-select: none;
+  }
+  /* Canvas cobre toda a tela por trás */
+  #fireworksCanvas {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    pointer-events: none; /* deixa os cliques passarem para os botões */
+    z-index: 1;
+  }
+</style>
+</head>
+<body>
+
+<div id="message">E a promessa do butico?</div>
+<div id="buttons">
+  <button id="btnSim">Sim</button>
+  <button id="btnNao">Não</button>
+</div>
+<div id="finalMessage">TE AMO!!!</div>
+
+<canvas id="fireworksCanvas"></canvas>
+
+<script>
+// Botão NÃO se move para uma posição próxima (mas fica parado)
+// Sempre próximo do botão SIM, mas nunca muito longe
+const btnSim = document.getElementById("btnSim");
+const btnNao = document.getElementById("btnNao");
+const buttonsDiv = document.getElementById("buttons");
+const finalMessage = document.getElementById("finalMessage");
+const message = document.getElementById("message");
+const fireworksCanvas = document.getElementById("fireworksCanvas");
+const ctx = fireworksCanvas.getContext("2d");
+
+let naoPositions = [];
+let naoCurrentIndex = 0;
+
+// Atualiza tamanho do canvas
+function resizeCanvas() {
+  fireworksCanvas.width = window.innerWidth;
+  fireworksCanvas.height = window.innerHeight;
+}
+resizeCanvas();
+window.addEventListener("resize", resizeCanvas);
+
+// Gera posições próximas ao botão SIM para colocar o NÃO
+function generateNaoPositions() {
+  const rectSim = btnSim.getBoundingClientRect();
+  const xSim = rectSim.left + rectSim.width / 2;
+  const ySim = rectSim.top + rectSim.height / 2;
+
+  naoPositions = [];
+
+  // Gera 5 posições aleatórias num círculo pequeno perto do botão SIM
+  const radius = 100;
+  for (let i = 0; i < 5; i++) {
+    const angle = (i * 72) * (Math.PI / 180); // 5 pontos ao redor (360/5=72)
+    const x = xSim + radius * Math.cos(angle);
+    const y = ySim + radius * Math.sin(angle);
+    naoPositions.push({ x, y });
+  }
+}
+
+// Move botão NÃO para a próxima posição parada
+function moveNao() {
+  if (naoPositions.length === 0) generateNaoPositions();
+
+  const pos = naoPositions[naoCurrentIndex];
+  btnNao.style.position = "fixed";
+  btnNao.style.left = `${pos.x - btnNao.offsetWidth / 2}px`;
+  btnNao.style.top = `${pos.y - btnNao.offsetHeight / 2}px`;
+
+  naoCurrentIndex++;
+  if (naoCurrentIndex >= naoPositions.length) naoCurrentIndex = 0;
+}
+
+// Inicializa posição do NÃO perto do SIM
+moveNao();
+
+// Quando a janela mudar, atualiza as posições do NÃO
+window.addEventListener("resize", () => {
+  generateNaoPositions();
+  naoCurrentIndex = 0;
+  moveNao();
+});
+
+// Ao clicar no botão NÃO, ele desaparece e reaparece em outra posição parada perto do SIM
+btnNao.addEventListener("click", () => {
+  btnNao.style.display = "none";
+  setTimeout(() => {
+    moveNao();
+    btnNao.style.display = "inline-block";
+  }, 500);
+});
+
+// Ao clicar no botão SIM, tudo desaparece e mostra o texto "TE AMO!!!"
+btnSim.addEventListener("click", () => {
+  btnSim.style.display = "none";
+  btnNao.style.display = "none";
+  message.style.display = "none";
+  buttonsDiv.style.display = "none";
+  finalMessage.style.display = "block";
+  startFireworks();
+});
+
+// Efeitos de explosões coloridas no canvas
+
+const fireworks = [];
+const colors = [
+  "#ff3838", "#ff9f1a", "#f9f871", "#38ff94", "#38aaff", "#9f38ff", "#ff38e0", "#fffb38"
+];
+
+function random(min, max) {
+  return Math.random() * (max - min) + min;
+}
+
+class FireworkParticle {
+  constructor(x, y, color) {
+    this.x = x;
+    this.y = y;
+    this.color = color;
+    this.radius = random(2, 4);
+    this.life = 80;
+    this.vx = random(-3, 3);
+    this.vy = random(-3, 3);
+    this.alpha = 1;
+  }
+  update() {
+    this.x += this.vx;
+    this.y += this.vy;
+    this.vy += 0.05; // gravidade suave
+    this.life--;
+    this.alpha = this.life / 80;
+  }
+  draw(ctx) {
+    ctx.save();
+    ctx.globalAlpha = this.alpha;
+    ctx.beginPath();
+    ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+    ctx.fillStyle = this.color;
+    ctx.shadowColor = this.color;
+    ctx.shadowBlur = 10;
+    ctx.fill();
+    ctx.restore();
+  }
+}
+
+function createFirework() {
+  const x = random(50, fireworksCanvas.width - 50);
+  const y = random(50, fireworksCanvas.height - 50);
+  const color = colors[Math.floor(Math.random() * colors.length)];
+  for (let i = 0; i < 20; i++) {
+    fireworks.push(new FireworkParticle(x, y, color));
+  }
+}
+
+let frameCount = 0;
+function animate() {
+  ctx.clearRect(0, 0, fireworksCanvas.width, fireworksCanvas.height);
+
+  if (frameCount % 50 === 0) {
+    createFirework();
+  }
+
+  for (let i = fireworks.length -1; i >= 0; i--) {
+    const p = fireworks[i];
+    p.update();
+    p.draw(ctx);
+    if (p.life <= 0) {
+      fireworks.splice(i, 1);
+    }
+  }
+
+  frameCount++;
+  requestAnimationFrame(animate);
+}
+
+function startFireworks() {
+  animate();
+}
+
+</script>
+
+</body>
+</html>
